@@ -1,0 +1,59 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    overflow: hidden;
+    background-color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    width: 100%;
+    height: 100%;
+}
+
+.webgl-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.webgl-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    outline: none; /* Removes the focus outline */
+}
+
+/* Fallback content for when WebGL fails */
+.fallback-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #333333;
+    font-size: 18px;
+    max-width: 80%;
+    z-index: 20;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: none; /* Hidden by default, shown via JS when needed */
+}
+
+.fallback-message h2 {
+    color: #ff3333;
+    margin-bottom: 15px;
+}
+
+.fallback-message p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+} 

@@ -1,0 +1,77 @@
+#loadig screen my rc car moving and adding a trail of smoke as it filles it
+#add text to the bottom - images to the top (with links on both)
+#shadows and textures on concrete and for the car and billboards
+#adding the sound of car driving
+#adding the browser icon of the same car
+
+#Making the bilbaords the way they are with images
+#Figuring out the content on each billbaord
+#loading screen is the cause of the red
+
+
+
+
+#funcitonality - 
+
+#extra
+#after I'm done with everything add the drift part
+
+
+
+
+#Figure out the content - how much to split
+#Put the billboards
+
+#Remove the dots
+
+#Add noise when moving - fade it off when not
+#fix car alignment
+#angling
+#angling zooms out from the original big bilboard of the main page on the side it loads out
+
+
+
+
+
+
+
+
+
+#NEW
+
+Autonomous one:
+Fix the text
+Put images on the screen
+Figure out what to put on the page
+
+Give it the main screen and press space to start - Roham Mehrabi (with Nida and Jerric)
+Add texture to the concrete
+Dust partcicles when driving
+Change the floor to something?
+Fix the angling
+Add the noise to the car
+Car slows down
+Loading screen with RC car
+Top browser has RC car moving
+Put clickable links to images
+Shadows and all for car/billbaords
+Make it ask
+Make the background keys two lines
+Design the main page
+From the back of the car - to see the billboards towards the car
+
+Drifting
+Add some background like the sky
+Add all the necessary lighting and some ambience for a color theme
+
+
+
+
+Conten of the pages to put
+Images on each
+Give the sky a background
+Put a very interesting texture on the floor
+
+All directions of billboards and text fixed
+FIx size of the car
+Put link on the pages

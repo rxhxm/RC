@@ -1,0 +1,26 @@
+{
+  "name": "rc-car-3d-experience",
+  "version": "1.0.0",
+  "description": "3D RC Car Experience using THREE.js",
+  "main": "src/js/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "three.js",
+    "3d",
+    "webgl",
+    "rc-car"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "gsap": "^3.12.2",
+    "three": "^0.154.0"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+} 
