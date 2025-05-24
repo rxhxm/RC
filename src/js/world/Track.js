@@ -71,9 +71,10 @@ export default class Track {
         const gridSize = 10000;
         const planeGeometry = new THREE.PlaneGeometry(gridSize, gridSize, 32, 32);
         
-        // Use a dark charcoal material for the floor (better for night scenes)
+        // Use a sandy desert material for the floor
+        const sandTexture = this.createSandDuneTexture();
         const planeMaterial = new THREE.MeshBasicMaterial({
-            color: 0x2a2a2a, // Dark charcoal gray floor
+            map: sandTexture,
             side: THREE.DoubleSide
         });
         
@@ -1155,5 +1156,129 @@ export default class Track {
         
         console.log("Refreshed starry background on floor");
         return true;
+    }
+
+    // Method to create a realistic sand dune texture
+    createSandDuneTexture() {
+        // Create a canvas for the sand texture
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size for good detail
+        canvas.width = 1024;
+        canvas.height = 1024;
+        
+        // Base sand color - warm desert tan
+        const baseColor = '#C19A6B'; // Sandy brown
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add sand color variations to create depth
+        for (let i = 0; i < 8000; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 5 + 2;
+            const opacity = Math.random() * 0.4 + 0.1;
+            
+            // Random sand color variations - lighter and darker patches
+            const variations = [
+                '#D4AF8C', // Lighter sand
+                '#B8956A', // Medium sand
+                '#A67C5A', // Darker sand
+                '#E6C2A6', // Very light sand
+                '#9A7049'  // Dark sand
+            ];
+            const color = variations[Math.floor(Math.random() * variations.length)];
+            
+            ctx.fillStyle = color + Math.floor(opacity * 255).toString(16).padStart(2, '0');
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add wind-blown sand ripples
+        for (let i = 0; i < 150; i++) {
+            const startX = Math.random() * canvas.width;
+            const startY = Math.random() * canvas.height;
+            const length = Math.random() * 80 + 20;
+            const angle = Math.random() * Math.PI * 2;
+            const endX = startX + Math.cos(angle) * length;
+            const endY = startY + Math.sin(angle) * length;
+            const width = Math.random() * 3 + 1;
+            
+            // Create gradient for sand ripple
+            const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+            gradient.addColorStop(0, 'rgba(160, 130, 98, 0.3)');
+            gradient.addColorStop(0.5, 'rgba(200, 170, 130, 0.6)');
+            gradient.addColorStop(1, 'rgba(160, 130, 98, 0.3)');
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+        
+        // Add dune shadows and highlights
+        for (let i = 0; i < 50; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 40 + 20;
+            
+            // Shadow side (darker)
+            const shadowGradient = ctx.createRadialGradient(x - size/3, y - size/3, 0, x, y, size);
+            shadowGradient.addColorStop(0, 'rgba(130, 100, 70, 0.4)');
+            shadowGradient.addColorStop(0.7, 'rgba(160, 130, 98, 0.2)');
+            shadowGradient.addColorStop(1, 'rgba(193, 154, 107, 0)');
+            
+            ctx.fillStyle = shadowGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Highlight side (lighter)
+            const highlightGradient = ctx.createRadialGradient(x + size/3, y + size/3, 0, x, y, size * 0.7);
+            highlightGradient.addColorStop(0, 'rgba(230, 194, 166, 0.3)');
+            highlightGradient.addColorStop(0.5, 'rgba(212, 175, 140, 0.1)');
+            highlightGradient.addColorStop(1, 'rgba(193, 154, 107, 0)');
+            
+            ctx.fillStyle = highlightGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add some scattered small rocks/pebbles for realism
+        for (let i = 0; i < 80; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 4 + 1;
+            
+            // Rock colors - grays and browns
+            const rockColors = ['#8B7355', '#A0826D', '#6B5B47', '#7A6B57'];
+            const color = rockColors[Math.floor(Math.random() * rockColors.length)];
+            
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add shadow to rock
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.beginPath();
+            ctx.ellipse(x + size/2, y + size/2, size * 0.8, size * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(8, 8); // Repeat the texture to cover the large ground plane
+        texture.needsUpdate = true;
+        
+        return texture;
     }
 } 
