@@ -71,10 +71,10 @@ export default class Track {
         const gridSize = 10000;
         const planeGeometry = new THREE.PlaneGeometry(gridSize, gridSize, 32, 32);
         
-        // Use a sandy desert material for the floor
-        const sandTexture = this.createSandDuneTexture();
+        // Use starry background texture for the floor by default
+        const starryTexture = this.createStarryBackgroundTexture();
         const planeMaterial = new THREE.MeshBasicMaterial({
-            map: sandTexture,
+            map: starryTexture,
             side: THREE.DoubleSide
         });
         
@@ -545,6 +545,42 @@ export default class Track {
             window.refreshStarryBackground = () => {
                 return this.applyStarryBackgroundToFloor();
             };
+            
+            // Add method to change floor and dune colors together
+            window.changeTerrainColor = (color) => {
+                if (this.trackPlane && this.sandDunes) {
+                    // Create new material with the specified color
+                    const newMaterial = new THREE.MeshBasicMaterial({
+                        color: color,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    // Update floor
+                    this.trackPlane.material = newMaterial;
+                    
+                    // Update all dunes
+                    this.sandDunes.forEach(dune => {
+                        dune.material.color.setHex(color);
+                        dune.material.needsUpdate = true;
+                    });
+                    
+                    console.log(`Changed terrain color to ${color.toString(16)}`);
+                    return `Terrain color changed to ${color.toString(16)}`;
+                } else {
+                    console.error("Floor or dunes not found");
+                    return "Error: Terrain not found";
+                }
+            };
+            
+            // Add method to apply starry background to both floor and dunes
+            window.applyStarryTerrain = () => {
+                return this.applyStarryBackgroundToFloor();
+            };
+            
+            console.log("Terrain control methods available:");
+            console.log("- window.changeTerrainColor(0xFFFFFF) - Change floor and dunes to a solid color");
+            console.log("- window.applyStarryTerrain() - Apply starry background to floor and dunes");
+            console.log("- window.refreshStarryBackground() - Refresh the starry background");
             
         } catch (error) {
             console.error("Error creating billboards:", error);
@@ -1144,7 +1180,7 @@ export default class Track {
         return texture;
     }
     
-    // New method to apply the starry background to the floor
+    // New method to apply starry background to the floor
     applyStarryBackgroundToFloor() {
         if (!this.trackPlane) {
             console.error("No track plane found to apply starry background");
@@ -1157,15 +1193,41 @@ export default class Track {
         this.trackPlane.material.map = starryTexture;
         this.trackPlane.material.needsUpdate = true;
         
-        console.log("Refreshed starry background on floor");
+        // Also update all dunes to match the floor
+        this.updateDunesTexture(starryTexture);
+        
+        console.log("Refreshed starry background on floor and dunes");
         return true;
+    }
+    
+    // New method to update dune textures to match the floor
+    updateDunesTexture(texture) {
+        if (this.sandDunes && this.sandDunes.length > 0) {
+            this.sandDunes.forEach(dune => {
+                if (dune.material) {
+                    // If the texture is provided, use it, otherwise use the floor's texture
+                    const textureToUse = texture || this.trackPlane.material.map;
+                    
+                    // Update the dune material to use the same texture as the floor
+                    dune.material.map = textureToUse;
+                    dune.material.needsUpdate = true;
+                    
+                    // Make sure the material supports textures
+                    if (!dune.material.map && this.trackPlane.material.color) {
+                        // If no texture, match the floor color
+                        dune.material.color.copy(this.trackPlane.material.color);
+                    }
+                }
+            });
+            console.log(`Updated ${this.sandDunes.length} dunes to match floor texture/color`);
+        }
     }
 
     // Method to create actual 3D sand dunes around the track
     createSandDunes() {
-        // Create a white material to match the floor
+        // Create material that will match the floor
         const duneMaterial = new THREE.MeshLambertMaterial({
-            color: 0xffffff // Pure white to match the floor
+            color: 0x000000 // Start with black to match starry background
         });
         
         // Create many more dunes with varied positions, heights, and sizes
@@ -1262,8 +1324,8 @@ export default class Track {
             duneGeometry.attributes.position.needsUpdate = true;
             duneGeometry.computeVertexNormals();
             
-            // Create the dune mesh
-            const dune = new THREE.Mesh(duneGeometry, duneMaterial);
+            // Create the dune mesh with a clone of the material so each can be updated independently
+            const dune = new THREE.Mesh(duneGeometry, duneMaterial.clone());
             
             // Position and scale the dune
             dune.position.set(pos.x, pos.y - pos.scaleY * 0.5, pos.z); // Partially bury in ground
@@ -1283,7 +1345,12 @@ export default class Track {
             this.sandDunes.push(dune);
         });
         
-        console.log(`Created ${this.sandDunes.length} white sand dunes around the track`);
+        // Apply the same texture as the floor to the dunes
+        setTimeout(() => {
+            this.updateDunesTexture();
+        }, 100); // Small delay to ensure floor is ready
+        
+        console.log(`Created ${this.sandDunes.length} sand dunes that match the floor`);
     }
     
     // Method to create a realistic sand dune texture
