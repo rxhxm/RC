@@ -6,6 +6,7 @@ export default class Track {
         this.scene = this.experience.scene;
         this.resources = this.experience.resources;
         this.time = this.experience.time;
+        this.sharedEnvironmentMaterial = new THREE.MeshLambertMaterial({ color: 0xC19A6B }); // Sandy color
 
         // Initialize immediately even before resources are ready
         this.createTrack();
@@ -71,15 +72,8 @@ export default class Track {
         const gridSize = 10000;
         const planeGeometry = new THREE.PlaneGeometry(gridSize, gridSize, 32, 32);
         
-        // Use starry background texture for the floor by default
-        const starryTexture = this.createStarryBackgroundTexture();
-        const planeMaterial = new THREE.MeshBasicMaterial({
-            map: starryTexture,
-            side: THREE.DoubleSide
-        });
-        
-        // Create and position the floor
-        this.trackPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+        // Use the shared material for the floor
+        this.trackPlane = new THREE.Mesh(planeGeometry, this.sharedEnvironmentMaterial);
         this.trackPlane.rotation.x = -Math.PI / 2;
         this.trackPlane.position.y = -10; // Move the ground plane down to show more sky
         this.scene.add(this.trackPlane);
@@ -110,7 +104,7 @@ export default class Track {
         this.createTrackLine(outerRadius - 0.1, 0.08, 'outer'); // Thicker outer edge line
         
         // Store materials for later texture application
-        this.planeMaterial = planeMaterial;
+        this.planeMaterial = this.sharedEnvironmentMaterial; // Use shared material
         this.trackMaterial = trackMaterial;
     }
     
@@ -545,42 +539,6 @@ export default class Track {
             window.refreshStarryBackground = () => {
                 return this.applyStarryBackgroundToFloor();
             };
-            
-            // Add method to change floor and dune colors together
-            window.changeTerrainColor = (color) => {
-                if (this.trackPlane && this.sandDunes) {
-                    // Create new material with the specified color
-                    const newMaterial = new THREE.MeshBasicMaterial({
-                        color: color,
-                        side: THREE.DoubleSide
-                    });
-                    
-                    // Update floor
-                    this.trackPlane.material = newMaterial;
-                    
-                    // Update all dunes
-                    this.sandDunes.forEach(dune => {
-                        dune.material.color.setHex(color);
-                        dune.material.needsUpdate = true;
-                    });
-                    
-                    console.log(`Changed terrain color to ${color.toString(16)}`);
-                    return `Terrain color changed to ${color.toString(16)}`;
-                } else {
-                    console.error("Floor or dunes not found");
-                    return "Error: Terrain not found";
-                }
-            };
-            
-            // Add method to apply starry background to both floor and dunes
-            window.applyStarryTerrain = () => {
-                return this.applyStarryBackgroundToFloor();
-            };
-            
-            console.log("Terrain control methods available:");
-            console.log("- window.changeTerrainColor(0xFFFFFF) - Change floor and dunes to a solid color");
-            console.log("- window.applyStarryTerrain() - Apply starry background to floor and dunes");
-            console.log("- window.refreshStarryBackground() - Refresh the starry background");
             
         } catch (error) {
             console.error("Error creating billboards:", error);
@@ -1180,55 +1138,28 @@ export default class Track {
         return texture;
     }
     
-    // New method to apply starry background to the floor
+    // New method to apply the starry background to the floor
     applyStarryBackgroundToFloor() {
-        if (!this.trackPlane) {
-            console.error("No track plane found to apply starry background");
+        if (!this.sharedEnvironmentMaterial) {
+            console.error("No shared environment material found to apply starry background");
             return false;
         }
         
         const starryTexture = this.createStarryBackgroundTexture();
         
-        // Update the floor material with a new starry texture
-        this.trackPlane.material.map = starryTexture;
-        this.trackPlane.material.needsUpdate = true;
-        
-        // Also update all dunes to match the floor
-        this.updateDunesTexture(starryTexture);
+        // Update the shared material for both floor and dunes
+        this.sharedEnvironmentMaterial.map = starryTexture;
+        this.sharedEnvironmentMaterial.color.set(0xffffff); // Set color to white to not tint the texture
+        this.sharedEnvironmentMaterial.needsUpdate = true;
         
         console.log("Refreshed starry background on floor and dunes");
         return true;
     }
-    
-    // New method to update dune textures to match the floor
-    updateDunesTexture(texture) {
-        if (this.sandDunes && this.sandDunes.length > 0) {
-            this.sandDunes.forEach(dune => {
-                if (dune.material) {
-                    // If the texture is provided, use it, otherwise use the floor's texture
-                    const textureToUse = texture || this.trackPlane.material.map;
-                    
-                    // Update the dune material to use the same texture as the floor
-                    dune.material.map = textureToUse;
-                    dune.material.needsUpdate = true;
-                    
-                    // Make sure the material supports textures
-                    if (!dune.material.map && this.trackPlane.material.color) {
-                        // If no texture, match the floor color
-                        dune.material.color.copy(this.trackPlane.material.color);
-                    }
-                }
-            });
-            console.log(`Updated ${this.sandDunes.length} dunes to match floor texture/color`);
-        }
-    }
 
     // Method to create actual 3D sand dunes around the track
     createSandDunes() {
-        // Create material that will match the floor
-        const duneMaterial = new THREE.MeshLambertMaterial({
-            color: 0x000000 // Start with black to match starry background
-        });
+        // Use the shared material for dunes
+        const duneMaterial = this.sharedEnvironmentMaterial;
         
         // Create many more dunes with varied positions, heights, and sizes
         const dunePositions = [];
@@ -1324,8 +1255,8 @@ export default class Track {
             duneGeometry.attributes.position.needsUpdate = true;
             duneGeometry.computeVertexNormals();
             
-            // Create the dune mesh with a clone of the material so each can be updated independently
-            const dune = new THREE.Mesh(duneGeometry, duneMaterial.clone());
+            // Create the dune mesh
+            const dune = new THREE.Mesh(duneGeometry, duneMaterial);
             
             // Position and scale the dune
             dune.position.set(pos.x, pos.y - pos.scaleY * 0.5, pos.z); // Partially bury in ground
@@ -1345,12 +1276,7 @@ export default class Track {
             this.sandDunes.push(dune);
         });
         
-        // Apply the same texture as the floor to the dunes
-        setTimeout(() => {
-            this.updateDunesTexture();
-        }, 100); // Small delay to ensure floor is ready
-        
-        console.log(`Created ${this.sandDunes.length} sand dunes that match the floor`);
+        console.log(`Created ${this.sandDunes.length} white sand dunes around the track`);
     }
     
     // Method to create a realistic sand dune texture
